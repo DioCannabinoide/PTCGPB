@@ -17,6 +17,10 @@ IniRead, instanceLaunchDelay, %settingsPath%, UserSettings, instanceLaunchDelay,
 IniRead, waitAfterBulkLaunch, %settingsPath%, UserSettings, waitAfterBulkLaunch, 40000
 IniRead, Instances, %settingsPath%, UserSettings, Instances, 1
 IniRead, folderPath, %settingsPath%, UserSettings, folderPath, C:\Program Files\Netease
+; New keep-awake settings (optional toggle in Settings.ini under [UserSettings])
+IniRead, KeepAwakeEnabled, %settingsPath%, UserSettings, KeepAwakeEnabled, 1
+IniRead, KeepAwakeIntervalSeconds, %settingsPath%, UserSettings, KeepAwakeIntervalSeconds, 45
+IniRead, KeepAwakeIncludeDisplay, %settingsPath%, UserSettings, KeepAwakeIncludeDisplay, 0
 mumuFolder = %folderPath%\MuMuPlayerGlobal-12.0
 if !FileExist(mumuFolder)
     mumuFolder = %folderPath%\MuMu Player 12
@@ -24,6 +28,84 @@ if !FileExist(mumuFolder){
     MsgBox, 16, , Can't Find MuMu, try old MuMu installer in Discord #announcements, otherwise double check your folder path setting!`nDefault path is C:\Program Files\Netease
     ExitApp
 }
+
+; --- Keep-awake feature: periodically tell Windows to stay awake using SetThreadExecutionState ---
+; Uses ES_SYSTEM_REQUIRED primarily; optionally also ES_DISPLAY_REQUIRED if enabled via INI.
+; Keeps actions minimal (no simulated mouse/keyboard) and logs ticks. Compatible with S3 and attempts to
+; detect Modern Standby (S0) via `powercfg /a` output; falls back to ES_SYSTEM_REQUIRED if S0 is found.
+
+; Constants for SetThreadExecutionState
+ES_CONTINUOUS         := 0x80000000
+ES_SYSTEM_REQUIRED    := 0x00000001
+ES_DISPLAY_REQUIRED   := 0x00000002
+ES_AWAYMODE_REQUIRED  := 0x00000040
+
+; Normalize interval and start timer if enabled
+if (KeepAwakeEnabled != "0") {
+    interval := KeepAwakeIntervalSeconds + 0
+    if (interval < 30)
+        interval := 30
+    if (interval > 60)
+        interval := 60
+    ms := interval * 1000
+
+    if (DetectModernStandby()) {
+        LogToFile("KeepAwake: Modern Standby (S0) detected; using ES_SYSTEM_REQUIRED fallback", "Monitor.txt")
+    } else {
+        LogToFile("KeepAwake: No Modern Standby detected; using ES_SYSTEM_REQUIRED", "Monitor.txt")
+    }
+
+    ; Start timer - KeepAwakeTick will call SetThreadExecutionState periodically
+    SetTimer, KeepAwakeTick, % ms
+    LogToFile("KeepAwake: Enabled. Interval (s): " . interval . ", IncludeDisplay: " . KeepAwakeIncludeDisplay, "Monitor.txt")
+} else {
+    LogToFile("KeepAwake: Disabled via INI.", "Monitor.txt")
+}
+
+; --- Helper: detect Modern Standby by calling `powercfg /a` and scanning output ---
+DetectModernStandby()
+{
+    tmpFile := A_Temp "\\ahk_powercfg_out.txt"
+    RunWait, %ComSpec% " /c powercfg /a > """ tmpFile """ 2>&1",, Hide
+    FileRead, out, %tmpFile%
+    FileDelete, %tmpFile%
+    if (ErrorLevel)
+        return 0
+
+    ; Look for common Modern Standby identifiers
+    if InStr(out, "Standby (S0 Low Power Idle)") || InStr(out, "S0 Low Power Idle")
+        return 1
+
+    return 0
+}
+
+; Timer callback: call SetThreadExecutionState with minimal flags to keep system alive
+KeepAwakeTick()
+{
+    global ES_CONTINUOUS, ES_SYSTEM_REQUIRED, ES_DISPLAY_REQUIRED, ES_AWAYMODE_REQUIRED, KeepAwakeIncludeDisplay
+
+    flags := ES_CONTINUOUS | ES_SYSTEM_REQUIRED
+    if (KeepAwakeIncludeDisplay != "0")
+        flags |= ES_DISPLAY_REQUIRED
+
+    ; Prefer SetThreadExecutionState (DllCall) — avoids simulated input when possible
+    result := DllCall("SetThreadExecutionState", "UInt", flags, "UInt")
+
+    ; Log result for diagnostics (keeps messages lightweight)
+    LogToFile("KeepAwakeTick: Called SetThreadExecutionState with flags=0x" . Format("{:X}", flags) . ", result=0x" . Format("{:X}", result), "Monitor.txt")
+
+    ; If SetThreadExecutionState returned 0 (failure), perform a very lightweight fallback:
+    ; a single, zero-distance mouse move via SendMessage to avoid visible cursor movement.
+    if (result == 0) {
+        ; Try a minimal mouse_event fallback that won't move the cursor visually (mouse event with no movement but a synthetic move may be ignored); instead send a harmless VK_SHIFT key down/up with PostMessage to workspace thread.
+        ; We keep this commented out by default to avoid interfering. Uncomment if you need an input fallback.
+        ; Send, {Shift down}{Shift up}
+        LogToFile("KeepAwakeTick: SetThreadExecutionState failed; fallback not active by default.", "Monitor.txt")
+    }
+}
+
+; --- End keep-awake additions ---
+
 Loop {
     ; Loop through each instance, check if it's started, and start it if it's not
     launched := 0
