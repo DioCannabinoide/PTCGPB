@@ -118,7 +118,7 @@ A_gptest := 0
 
 initializeAdbShell()
 CreateStatusMessage("Initializing bot...",,,, false)
-restartGameInstance("Initializing bot...", false)
+; restartGameInstance("Initializing bot...", false)
 pToken := Gdip_Startup()
 
 if(heartBeat)
@@ -205,6 +205,24 @@ Loop {
                 } else if(FindOrLoseImage(186, 496, 206, 518, , "Accept", 0, failSafeTime)) {
                     done := true
                     break
+                } else if(FindOrLoseImage(120, 187, 155, 210, , "Error", 0, failSafeTime)) {
+                    ; Handle communication error
+                    CreateStatusMessage("Error message detected. Clicking retry...",,,, false)
+                    LogToFile("Error message in Main " . scriptName . ". Clicking retry...")
+                    Sleep, 1000
+                    adbClick(82, 389)  ; Click retry button
+                    Sleep, 1000
+                    adbClick(139, 386) ; Click OK/confirm
+                    Sleep, 1000
+                    Reload
+                } else if(FindOrLoseImage(124, 423, 155, 455, , "StartupErrorX", 0, failSafeTime)) {
+                    ; Handle startup error with X button
+                    CreateStatusMessage("Start-up error detected. Clearing and reloading...",,,, false)
+                    LogToFile("Start-up error in Main " . scriptName . ". Reloading...")
+                    Sleep, 2000
+                    adbClick(139, 440)  ; Click X to close error
+                    Sleep, 4000
+                    Reload
                 } else if(clickButton) {
                     StringSplit, pos, clickButton, `,  ; Split at ", "
                     if (scaleParam = 287) {
@@ -804,6 +822,14 @@ RemoveNonVipFriends() {
 
     includesIdsAndNames := false
     vipFriendsArray :=  GetFriendAccountsFromFile(A_ScriptDir . "\..\vip_ids.txt", includesIdsAndNames)
+    
+		; append new list onto vipFriendsArray to combine manual and automatic GPtesting KSBM
+		manualVipFile := A_ScriptDir . "\..\manual_vip_ids.txt"
+		if FileExist(manualVipFile) {
+		    ManualvipFriendsArray := GetFriendAccountsFromFile(manualVipFile, includesIdsAndNames)
+		    vipFriendsArray.push(ManualvipFriendsArray*)
+		}                
+    
     if (!vipFriendsArray.MaxIndex()) {
         CreateStatusMessage("No accounts found in vip_ids.txt. Aborting test...",,,, false)
         return
@@ -953,7 +979,7 @@ ParseFriendInfo(ByRef friendCode, ByRef friendName, ByRef parseFriendCodeResult,
 
         ; Parse friend identifiers
         if (!parseFriendCodeResult)
-            parseFriendCodeResult := ParseFriendInfoLoop(fullScreenshotFile, 328, 57, 197, 28, "0123456789", "^\d{14,17}$", friendCode)
+            parseFriendCodeResult := ParseFriendInfoLoop(fullScreenshotFile, 265, 57, 240, 28, "0123456789", "^\d{14,17}$", friendCode)
         if (includesIdsAndNames && !parseFriendNameResult)
             parseFriendNameResult := ParseFriendInfoLoop(fullScreenshotFile, 107, 427, 325, 46, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", "^[a-zA-Z0-9]{5,20}$", friendName)
         if (parseFriendCodeResult && (!includesIdsAndNames || parseFriendNameResult))

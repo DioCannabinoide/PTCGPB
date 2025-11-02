@@ -37,6 +37,39 @@
    }
 }
 
+ClearCardDetectionSettings() {
+    global FullArtCheck, TrainerCheck, RainbowCheck, PseudoGodPack
+    global CheckShinyPackOnly, InvalidCheck, CrownCheck, ShinyCheck, ImmersiveCheck
+    global minStars, minStarsShiny
+    
+    FullArtCheck := 0
+    TrainerCheck := 0
+    RainbowCheck := 0
+    PseudoGodPack := 0
+    CheckShinyPackOnly := 0  ; Always cleared
+    InvalidCheck := 0
+    CrownCheck := 0
+    ShinyCheck := 0
+    ImmersiveCheck := 0
+    minStars := 0
+    minStarsShiny := 0  ; Cleared along with minStars
+    
+    ; Update GUI controls if they exist
+    GuiControl,, FullArtCheck, 0
+    GuiControl,, TrainerCheck, 0
+    GuiControl,, RainbowCheck, 0
+    GuiControl,, PseudoGodPack, 0
+    GuiControl,, CheckShinyPackOnly, 0
+    GuiControl,, InvalidCheck, 0
+    GuiControl,, CrownCheck, 0
+    GuiControl,, ShinyCheck, 0
+    GuiControl,, ImmersiveCheck, 0
+    GuiControl,, minStars, 0
+    GuiControl,, minStarsShiny, 0
+    
+    UpdateCardDetectionButtonText()
+}
+
 #NoEnv
 #MaxHotkeysPerInterval 99000000
 #HotkeyInterval 99000000
@@ -72,11 +105,11 @@ OnError("ErrorHandler")
 
 githubUser := "kevnITG"
    ,repoName := "PTCGPB"
-   ,localVersion := "v7.1.2"
+   ,localVersion := "v8.2.2"
    ,scriptFolder := A_ScriptDir
    ,zipPath := A_Temp . "\update.zip"
    ,extractPath := A_Temp . "\update"
-   ,intro := "Deluxe"
+   ,intro := "Mega Rising"
 
 global GUI_WIDTH := 790
 global GUI_HEIGHT := 370
@@ -171,7 +204,7 @@ NextStep:
    MainGuiName := SGUI
 
    sectionColor := "cWhite"
-   Gui, Add, GroupBox, x5 y0 w240 h50 %sectionColor%, Friend ID
+   Gui, Add, GroupBox, x5 y0 w240 h50 %sectionColor%, Friend ID (Wonderpick mode only)
    if(FriendID = "ERROR" || FriendID = "")
      FriendID =
    Gui, Add, Edit, vFriendID w180 x35 y20 h20 -E0x200 Background2A2A2A cWhite, %FriendID%
@@ -200,17 +233,17 @@ NextStep:
 
    if (deleteMethod = "Create Bots (13P)")
    defaultDelete := 1
-   else if (deleteMethod = "Inject 13-39P")
+   else if (deleteMethod = "Inject 13P+")
    defaultDelete := 2
    else if (deleteMethod = "Inject Missions")
    defaultDelete := 2
-   else if (deleteMethod = "Inject Wonderpick 39P+")
+   else if (deleteMethod = "Inject Wonderpick 96P+")
    defaultDelete := 3
-   Gui, Add, DropDownList, vdeleteMethod gdeleteSettings choose%defaultDelete% x20 y210 w200 Background2A2A2A cWhite, Create Bots (13P)|Inject 13-39P|Inject Wonderpick 39P+
+   Gui, Add, DropDownList, vdeleteMethod gdeleteSettings choose%defaultDelete% x20 y210 w200 Background2A2A2A cWhite, Create Bots (13P)|Inject 13P+|Inject Wonderpick 96P+
 
-   Gui, Add, Checkbox, % (packMethod ? "Checked" : "") " vpackMethod x20 y240 " . sectionColor . ((deleteMethod = "Inject Wonderpick 39P+") ? "" : " Hidden"), % currentDictionary.Txt_packMethod
-   Gui, Add, Checkbox, % (nukeAccount ? "Checked" : "") " vnukeAccount x20 y240 " . sectionColor . ((deleteMethod = "Create Bots (13P)")? "": " Hidden"), % currentDictionary.Txt_nukeAccount
-   Gui, Add, Checkbox, % (openExtraPack ? "Checked" : "") " vopenExtraPack gopenExtraPackSettings x20 y260 " . sectionColor . ((deleteMethod = "Inject Wonderpick 39P+" || deleteMethod = "Inject 13-39P") ? "" : " Hidden"), % currentDictionary.Txt_openExtraPack
+   Gui, Add, Checkbox, % (packMethod ? "Checked" : "") " vpackMethod x20 y240 " . sectionColor . ((deleteMethod = "Inject Wonderpick 96P+") ? "" : " Hidden"), % currentDictionary.Txt_packMethod
+   ; Gui, Add, Checkbox, % (nukeAccount ? "Checked" : "") " vnukeAccount x20 y240 " . sectionColor . ((deleteMethod = "Create Bots (13P)")? "": " Hidden"), % currentDictionary.Txt_nukeAccount
+   Gui, Add, Checkbox, % (openExtraPack ? "Checked" : "") " vopenExtraPack gopenExtraPackSettings x20 y260 " . sectionColor . ((deleteMethod = "Inject Wonderpick 96P+" || deleteMethod = "Inject 13P+") ? "" : " Hidden"), % currentDictionary.Txt_openExtraPack
    Gui, Add, Checkbox, % (spendHourGlass ? "Checked" : "") " vspendHourGlass gspendHourGlassSettings x20 y280 " . sectionColor . ((deleteMethod = "Create Bots (13P)")? " Hidden":""), % currentDictionary.Txt_spendHourGlass
 
    Gui, Add, Text, x20 y305 %sectionColor% vSortByText, % currentDictionary.SortByText
@@ -244,17 +277,20 @@ NextStep:
 
    sectionColor := "cFF4500"
    Gui, Font, s10 cWhite, Segoe UI
-   Gui, Add, GroupBox, x255 y65 w180 h50 %sectionColor%, % currentDictionary.CardDetection
+   Gui, Add, GroupBox, x255 y55 w180 h50 %sectionColor%, % currentDictionary.CardDetection
    
-   Gui, Add, Button, x275 y85 w140 h25 gShowCardDetection vCardDetectionButton BackgroundTrans, Loading...
+   Gui, Add, Button, x275 y75 w140 h25 gShowCardDetection vCardDetectionButton BackgroundTrans, Loading...
    
    UpdateCardDetectionButtonText()
 
    sectionColor := "c4169E1"
    Gui, Font, s10 cWhite, Segoe UI
-   Gui, Add, GroupBox, x255 y130 w180 h50 %sectionColor%, % currentDictionary.SaveForTrade
+   Gui, Add, GroupBox, x255 y110 w180 h70 %sectionColor%, % currentDictionary.SaveForTrade
    
-   Gui, Add, Button, x275 y150 w140 h25 gShowS4TSettings vS4TButton BackgroundTrans, Loading...
+   Gui, Add, Button, x275 y130 w140 h25 gShowS4TSettings vS4TButton BackgroundTrans, Loading...
+   
+   Gui, Font, s6 cWhite, Segoe UI
+   Gui, Add, Button, x295 y160 w100 h15 gOpenTradesDashboard BackgroundTrans, Open Trades Dashboard
    
    UpdateS4TButtonText()
 
@@ -326,7 +362,9 @@ NextStep:
    Gui, Font, s12 cWhite Bold
    Gui, Add, Text, x621 y20 w155 h50 Left BackgroundTrans cWhite, % currentDictionary.title_main
    Gui, Font, s10 cWhite Bold
-   Gui, Add, Text, x621 y20 w155 h50 Left BackgroundTrans cWhite, % "`nv7.1.2 (kevinnnn)"
+   Gui, Add, Text, x621 y20 w155 h50 Left BackgroundTrans cWhite, % "`nv8.2.2 kevinnnn"
+
+   Gui, Add, Picture, gBuyMeCoffee x625 y60, %A_ScriptDir%\GUI\Images\support_me_on_kofi.png
 
    Gui, Font, s10 cWhite Bold
    Gui, Add, Button, x621 y205 w155 h25 gBalanceXMLs BackgroundTrans, % currentDictionary.btn_balance
@@ -351,38 +389,51 @@ return
 
 deleteSettings:
   Gui, Submit, NoHide
+
+   if (deleteMethod != "Inject Wonderpick 96P+") {
+    ClearCardDetectionSettings()
+    s4tWP := false
+    s4tWPMinCards := 1
+   }
+
   if (deleteMethod = "Create Bots (13P)") {
     GuiControl, Hide, FriendID
     GuiControl, Hide, spendHourGlass
     GuiControl, Hide, packMethod
     GuiControl, Hide, openExtraPack
-    GuiControl, Show, nukeAccount
+    ; GuiControl, Show, nukeAccount
     GuiControl, Hide, SortByText
     GuiControl, Hide, SortByDropdown
     GuiControl, Show, AccountNameText
     GuiControl, Show, AccountName
-  } else if (deleteMethod = "Inject Wonderpick 39P+") {
+    GuiControl, Hide, WaitTime
+    nukeAccount := false
+    FriendID := ""
+  } else if (deleteMethod = "Inject Wonderpick 96P+") {
     GuiControl, Show, FriendID
     GuiControl, Show, spendHourGlass
     GuiControl, Show, packMethod
     GuiControl, Show, openExtraPack
-    GuiControl, Hide, nukeAccount
+    ; GuiControl, Hide, nukeAccount
     GuiControl, Show, SortByText
     GuiControl, Show, SortByDropdown
     GuiControl, Hide, AccountNameText
     GuiControl, Hide, AccountName
+    GuiControl, Show, WaitTime
     nukeAccount := false
-  } else {
+  } else if (deleteMethod = "Inject 13P+") {
     GuiControl, Hide, FriendID
     GuiControl, Show, spendHourGlass
     GuiControl, Hide, packMethod
     GuiControl, Show, openExtraPack
-    GuiControl, Hide, nukeAccount
+    ; GuiControl, Hide, nukeAccount
     GuiControl, Show, SortByText
     GuiControl, Show, SortByDropdown
     GuiControl, Hide, AccountNameText
     GuiControl, Hide, AccountName
+    GuiControl, Hide, WaitTime
     nukeAccount := false
+    FriendID := ""  ; NEW: Clear Friend ID for Inject 13P+
   }
 return
 
@@ -416,13 +467,19 @@ SortByDropdownHandler:
 return
 
 UpdatePackSelectionButtonText() {
-    global Deluxe, Springs, HoOh, Lugia, Eevee, Buzzwole, Solgaleo, Lunala, Shining, Arceus
+    global MegaGyarados, MegaBlaziken, MegaAltaria, Deluxe, Springs, HoOh, Lugia, Eevee, Buzzwole, Solgaleo, Lunala, Shining, Arceus
     global Palkia, Dialga, Pikachu, Charizard, Mewtwo, Mew, currentDictionary
     
     selectedPacks := []
 
+    if (MegaGyarados)
+        selectedPacks.Push(currentDictionary.Txt_MegaGyarados)
+    if (MegaBlaziken)
+        selectedPacks.Push(currentDictionary.Txt_MegaBlaziken)
+    if (MegaAltaria)
+        selectedPacks.Push(currentDictionary.Txt_MegaAltaria)
     if (Deluxe)
-         selectedPacks.Push(currentDictionary.Txt_Deluxe)
+        selectedPacks.Push(currentDictionary.Txt_Deluxe)
     if (Springs)
         selectedPacks.Push(currentDictionary.Txt_Springs)
     if (HoOh)
@@ -487,7 +544,7 @@ ShowPackSelection:
     WinGetPos, mainWinX, mainWinY, mainWinW, mainWinH, A
     
     popupX := mainWinX + 275 + 140 + 10
-    popupY := mainWinY + 18 + 30 + 25
+    popupY := mainWinY - 50
     
     Gui, PackSelect:Destroy
     Gui, PackSelect:New, +ToolWindow -MaximizeBox -MinimizeBox +LastFound, Pack Selection
@@ -495,8 +552,14 @@ ShowPackSelection:
     Gui, PackSelect:Font, s10 cWhite, Segoe UI
 
     yPos := 10
-    Gui, PackSelect:Add, Checkbox, % (Deluxe ? "Checked" : "") " vDeluxe_Popup x10 y" . yPos . " cWhite", % currentDictionary.Txt_Deluxe
-    yPos += 25    
+    Gui, PackSelect:Add, Checkbox, % (MegaGyarados ? "Checked" : "") " vMegaGyarados_Popup x10 y" . yPos . " cWhite", % currentDictionary.Txt_MegaGyarados
+    yPos += 25
+    Gui, PackSelect:Add, Checkbox, % (MegaBlaziken ? "Checked" : "") " vMegaBlaziken_Popup x10 y" . yPos . " cWhite", % currentDictionary.Txt_MegaBlaziken
+    yPos += 25
+    Gui, PackSelect:Add, Checkbox, % (MegaAltaria ? "Checked" : "") " vMegaAltaria_Popup x10 y" . yPos . " cWhite", % currentDictionary.Txt_MegaAltaria
+    yPos += 25
+    ; Gui, PackSelect:Add, Checkbox, % (Deluxe ? "Checked" : "") " vDeluxe_Popup x10 y" . yPos . " cWhite", % currentDictionary.Txt_Deluxe
+    ; yPos += 25    
     Gui, PackSelect:Add, Checkbox, % (Springs ? "Checked" : "") " vSprings_Popup x10 y" . yPos . " cWhite", % currentDictionary.Txt_Springs
     yPos += 25
     Gui, PackSelect:Add, Checkbox, % (HoOh ? "Checked" : "") " vHoOh_Popup x10 y" . yPos . " cWhite", % currentDictionary.Txt_HoOh
@@ -538,7 +601,9 @@ return
 ApplyPackSelection:
     Gui, PackSelect:Submit, NoHide
     
-   
+    MegaGyarados := MegaGyarados_Popup
+    MegaBlaziken := MegaBlaziken_Popup
+    MegaAltaria := MegaAltaria_Popup
     Deluxe := Deluxe_Popup
     Springs := Springs_Popup
     HoOh := HoOh_Popup
@@ -568,8 +633,8 @@ CancelPackSelection:
 return
 
 UpdateCardDetectionButtonText() {
-    global FullArtCheck, TrainerCheck, RainbowCheck, PseudoGodPack, CheckShinyPackOnly
-    global InvalidCheck, CrownCheck, ShinyCheck, ImmersiveCheck, minStars, minStarsShiny
+    global FullArtCheck, TrainerCheck, RainbowCheck, PseudoGodPack
+    global InvalidCheck, CrownCheck, ShinyCheck, ImmersiveCheck, minStars
     global currentDictionary
     
     enabledOptions := []
@@ -588,16 +653,12 @@ UpdateCardDetectionButtonText() {
         enabledOptions.Push("Save Shiny")
     if (ImmersiveCheck)
         enabledOptions.Push("Save Immersives")
-    if (CheckShinyPackOnly)
-        enabledOptions.Push("Only Shiny Packs")
     if (InvalidCheck)
         enabledOptions.Push("Ignore Invalid")
     
     statusText := ""
-    if (minStars > 0 || minStarsShiny > 0) {
+    if (minStars > 0) {
         statusText .= "Min GP 2★: " . minStars
-        if (minStarsShiny > 0)
-            statusText .= " (Shiny: " . minStarsShiny . ")"
     }
     
     if (enabledOptions.Length() > 0) {
@@ -612,7 +673,7 @@ UpdateCardDetectionButtonText() {
         statusText .= "No options selected"
     }
     
-    if (statusText = "No options selected" && minStars = 0 && minStarsShiny = 0) {
+    if (statusText = "No options selected" && minStars = 0) {
         statusText := "Configure settings..."
     }
     
@@ -622,13 +683,20 @@ UpdateCardDetectionButtonText() {
 }
 
 ShowCardDetection:
+    Gui, Submit, NoHide
+    
+    if (deleteMethod = "Create Bots (13P)" || deleteMethod = "Inject 13P+") {
+        MsgBox, 64, InjectWP Card Detection, Wonderpick Card Detection is for 'Inject Wonderpick 96P+'' mode.`n`nTo find cards to trade, use 'Save for Trade' settings instead.
+        return
+    }
+    
     WinGetPos, mainWinX, mainWinY, mainWinW, mainWinH, A
     
     popupX := mainWinX + 275 + 140 + 10
     popupY := mainWinY + 73 + 30
     
     Gui, CardDetect:Destroy
-    Gui, CardDetect:New, +ToolWindow -MaximizeBox -MinimizeBox +LastFound, Card Detection Settings
+    Gui, CardDetect:New, +ToolWindow -MaximizeBox -MinimizeBox +LastFound, Wonderpick Card Detection Settings
     Gui, CardDetect:Color, 1E1E1E, 333333
     Gui, CardDetect:Font, s10 cWhite, Segoe UI
     
@@ -636,10 +704,6 @@ ShowCardDetection:
     
     Gui, CardDetect:Add, Text, x15 y%yPos% cWhite, Min GP 2★:
     Gui, CardDetect:Add, Edit, vminStars_Popup w20 x140 y%yPos% h20 -E0x200 Background2A2A2A cWhite Center, %minStars%
-    yPos += 25
-
-    Gui, CardDetect:Add, Text, x15 y%yPos% cWhite, Min GP 2★ (Shiny):
-    Gui, CardDetect:Add, Edit, vminStarsShiny_Popup w20 x140 y%yPos% h20 -E0x200 Background2A2A2A cWhite Center, %minStarsShiny%
     yPos += 25
       
     Gui, CardDetect:Add, Checkbox, % (FullArtCheck ? "Checked" : "") " vFullArtCheck_Popup x15 y" . yPos . " cWhite", Single Full Art 2★
@@ -649,8 +713,6 @@ ShowCardDetection:
     Gui, CardDetect:Add, Checkbox, % (RainbowCheck ? "Checked" : "") " vRainbowCheck_Popup x15 y" . yPos . " cWhite", Single Rainbow 2★
     yPos += 25
     Gui, CardDetect:Add, Checkbox, % (PseudoGodPack ? "Checked" : "") " vPseudoGodPack_Popup x15 y" . yPos . " cWhite", Double 2★
-    yPos += 25
-    Gui, CardDetect:Add, Checkbox, % (CheckShinyPackOnly ? "Checked" : "") " vCheckShinyPackOnly_Popup x15 y" . yPos . " cWhite", Only for Shiny Packs
     yPos += 25
     Gui, CardDetect:Add, Checkbox, % (InvalidCheck ? "Checked" : "") " vInvalidCheck_Popup x15 y" . yPos . " cWhite", Ignore Invalid Packs
     yPos += 35
@@ -676,12 +738,12 @@ ApplyCardDetection:
     Gui, CardDetect:Submit, NoHide
     
     minStars := minStars_Popup
-    minStarsShiny := minStarsShiny_Popup
+    minStarsShiny := minStars_Popup  ; Use same value for shiny packs
     FullArtCheck := FullArtCheck_Popup
     TrainerCheck := TrainerCheck_Popup
     RainbowCheck := RainbowCheck_Popup
     PseudoGodPack := PseudoGodPack_Popup
-    CheckShinyPackOnly := CheckShinyPackOnly_Popup
+    CheckShinyPackOnly := 0  ; Always disabled
     InvalidCheck := InvalidCheck_Popup
     CrownCheck := CrownCheck_Popup
     ShinyCheck := ShinyCheck_Popup
@@ -798,6 +860,7 @@ return
 
 UpdateS4TButtonText() {
     global s4tEnabled, s4t1Star, s4t3Dmnd, s4t4Dmnd, currentDictionary
+    global s4tTrainer, s4tRainbow, s4tFullArt, s4tCrown, s4tImmersive, s4tShiny1Star, s4tShiny2Star
     
     if (!s4tEnabled) {
         Gui, Font, s8 cRed, Segoe UI
@@ -813,25 +876,31 @@ UpdateS4TButtonText() {
         enabledOptions.Push("4◆")
     if (s4t3Dmnd)
         enabledOptions.Push("3◆")
+    if (s4tTrainer)
+        enabledOptions.Push("Trainer")
+    if (s4tRainbow)
+        enabledOptions.Push("Rainbow")
+    if (s4tFullArt)
+        enabledOptions.Push("Full Art")
+    if (s4tCrown)
+        enabledOptions.Push("Crown")
+    if (s4tImmersive)
+        enabledOptions.Push("Immersive")
+    if (s4tShiny1Star)
+        enabledOptions.Push("Shiny1★")
+    if (s4tShiny2Star)
+        enabledOptions.Push("Shiny2★")
     
     statusText := currentDictionary.Txt_S4TEnabled
     if (enabledOptions.Length() > 0) {
-        statusText .= "`n" . Join(enabledOptions, ", ")
+        statusText .= "`n" . enabledOptions[1]
+        if (enabledOptions.Length() > 1)
+            statusText .= " +" . (enabledOptions.Length() - 1) . " more"
     }
     
     Gui, Font, s8 cLime, Segoe UI
     GuiControl, Font, S4TButton
     GuiControl,, S4TButton, %statusText%
-}
-
-Join(array, delimiter) {
-    result := ""
-    for index, value in array {
-        if (index > 1)
-            result .= delimiter
-        result .= value
-    }
-    return result
 }
 
 ShowSystemSettings:
@@ -954,7 +1023,7 @@ ShowS4TSettings:
     buttonCenterX := 375
     popupWidth := 200
     popupX := mainWinX + buttonCenterX - (popupWidth / 2)
-    popupY := mainWinY + 50
+    popupY := mainWinY + 0
     
     Gui, S4TSettingsSelect:Destroy
     Gui, S4TSettingsSelect:New, +ToolWindow -MaximizeBox -MinimizeBox +LastFound, Save for Trade Settings
@@ -965,21 +1034,43 @@ ShowS4TSettings:
     
     yPos := 15
     Gui, S4TSettingsSelect:Add, Checkbox, % (s4tEnabled ? "Checked" : "") " vs4tEnabled_Popup x15 y" . yPos . " cWhite", Enable S4T
-    yPos += 30
+    yPos += 25
     
-    Gui, S4TSettingsSelect:Add, Checkbox, % (s4t1Star ? "Checked" : "") " vs4t1Star_Popup x15 y" . yPos . " " . sectionColor, 1 ★
-    yPos += 20
-    Gui, S4TSettingsSelect:Add, Checkbox, % (s4t4Dmnd ? "Checked" : "") " vs4t4Dmnd_Popup x15 y" . yPos . " " . sectionColor, 4 ◆◆◆◆
-    yPos += 20
-    Gui, S4TSettingsSelect:Add, Checkbox, % (s4t3Dmnd ? "Checked" : "") " vs4t3Dmnd_Popup x15 y" . yPos . " " . sectionColor, 3 ◆◆◆
-    yPos += 35
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4t3Dmnd ? "Checked" : "") " vs4t3Dmnd_Popup x15 y" . yPos . " " . sectionColor, ◆◆◆
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4t4Dmnd ? "Checked" : "") " vs4t4Dmnd_Popup x15 y" . yPos . " " . sectionColor, ◆◆◆◆
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4t1Star ? "Checked" : "") " vs4t1Star_Popup x15 y" . yPos . " " . sectionColor, ★
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tShiny1Star ? "Checked" : "") " vs4tShiny1Star_Popup x15 y" . yPos . " " . sectionColor, ★ Shiny
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tTrainer ? "Checked" : "") " vs4tTrainer_Popup x15 y" . yPos . " " . sectionColor, ★★ Trainer
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tRainbow ? "Checked" : "") " vs4tRainbow_Popup x15 y" . yPos . " " . sectionColor, ★★ Rainbow
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tFullArt ? "Checked" : "") " vs4tFullArt_Popup x15 y" . yPos . " " . sectionColor, ★★ Full Art
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tShiny2Star ? "Checked" : "") " vs4tShiny2Star_Popup x15 y" . yPos . " " . sectionColor, ★★ Shiny
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tImmersive ? "Checked" : "") " vs4tImmersive_Popup x15 y" . yPos . " " . sectionColor, Immersive
+    yPos += 18
+    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tCrown ? "Checked" : "") " vs4tCrown_Popup x15 y" . yPos . " " . sectionColor, ♚ Crown Rare
+    yPos += 25
     
+    ; Wonderpick section
     Gui, S4TSettingsSelect:Add, Checkbox, % (s4tWP ? "Checked" : "") " vs4tWP_Popup x15 y" . yPos . " cWhite", % currentDictionary.Txt_s4tWP
     yPos += 20
     Gui, S4TSettingsSelect:Add, Text, x15 y%yPos% %sectionColor%, % currentDictionary.Txt_s4tWPMinCards
     Gui, S4TSettingsSelect:Add, Edit, cFDFDFD w40 x135 y%yPos% h20 vs4tWPMinCards_Popup -E0x200 Background2A2A2A Center cWhite, %s4tWPMinCards%
     yPos += 30
+    if (deleteMethod != "Inject Wonderpick 96P+") {
+        GuiControl, S4TSettingsSelect:Hide, s4tWP_Popup
+        GuiControl, S4TSettingsSelect:Hide, s4tWPMinCardsText_Popup
+        GuiControl, S4TSettingsSelect:Hide, s4tWPMinCards_Popup
+        yPos -= 50  ; Adjust yPos since we're hiding these controls
+    }
     
+    ; Discord settings
     if(StrLen(s4tDiscordUserId) < 3)
         s4tDiscordUserId := ""
     if(StrLen(s4tDiscordWebhookURL) < 3)
@@ -997,14 +1088,17 @@ ShowS4TSettings:
     
     Gui, S4TSettingsSelect:Add, Checkbox, % (s4tSendAccountXml ? "Checked" : "") " vs4tSendAccountXml_Popup x15 y" . yPos . " " . sectionColor, % currentDictionary.Txt_s4tSendAccountXml
     yPos += 20
-    Gui, S4TSettingsSelect:Add, Checkbox, % (s4tSilent ? "Checked" : "") " vs4tSilent_Popup x15 y" . yPos . " " . sectionColor, Silent (No Ping)
-    yPos += 35
+    
+    Gui, S4TSettingsSelect:Add, Checkbox, % (ocrShinedust ? "Checked" : "") " vocrShinedust_Popup x15 y" . yPos . " " . sectionColor, Track Shinedust
+    yPos += 25
+    ; Gui, S4TSettingsSelect:Add, Checkbox, % (s4tSilent ? "Checked" : "") " vs4tSilent_Popup x15 y" . yPos . " " . sectionColor, Silent (No Ping)
+    ; yPos += 35
     
     Gui, S4TSettingsSelect:Add, Button, x15 y%yPos% w70 h30 gApplyS4TSettings, Apply
     Gui, S4TSettingsSelect:Add, Button, x95 y%yPos% w70 h30 gCancelS4TSettings, Cancel
     yPos += 40
     
-    Gui, S4TSettingsSelect:Show, x%popupX% y%popupY% w185 h%yPos%
+    Gui, S4TSettingsSelect:Show, x%popupX% y%popupY% w200 h%yPos%
 return
 
 ApplyS4TSettings:
@@ -1014,12 +1108,21 @@ ApplyS4TSettings:
     s4t1Star := s4t1Star_Popup
     s4t4Dmnd := s4t4Dmnd_Popup
     s4t3Dmnd := s4t3Dmnd_Popup
+    s4tTrainer := s4tTrainer_Popup
+    s4tRainbow := s4tRainbow_Popup
+    s4tFullArt := s4tFullArt_Popup
+    s4tCrown := s4tCrown_Popup
+    s4tImmersive := s4tImmersive_Popup
+    s4tShiny1Star := s4tShiny1Star_Popup
+    s4tShiny2Star := s4tShiny2Star_Popup
     s4tWP := s4tWP_Popup
     s4tWPMinCards := s4tWPMinCards_Popup
     s4tDiscordUserId := s4tDiscordUserId_Popup
     s4tDiscordWebhookURL := s4tDiscordWebhookURL_Popup
     s4tSendAccountXml := s4tSendAccountXml_Popup
-    s4tSilent := s4tSilent_Popup
+    ocrShinedust := ocrShinedust_Popup
+    s4tSilent := 0
+    ; s4tSilent := s4tSilent_Popup
     
     if (s4tWPMinCards < 1)
         s4tWPMinCards := 1
@@ -1034,12 +1137,20 @@ ApplyS4TSettings:
     GuiControl,, s4t1Star, %s4t1Star%
     GuiControl,, s4t4Dmnd, %s4t4Dmnd%
     GuiControl,, s4t3Dmnd, %s4t3Dmnd%
+    GuiControl,, s4tTrainer, %s4tTrainer%
+    GuiControl,, s4tRainbow, %s4tRainbow%
+    GuiControl,, s4tFullArt, %s4tFullArt%
+    GuiControl,, s4tCrown, %s4tCrown%
+    GuiControl,, s4tImmersive, %s4tImmersive%
+    GuiControl,, s4tShiny1Star, %s4tShiny1Star%
+    GuiControl,, s4tShiny2Star, %s4tShiny2Star%
     GuiControl,, s4tWP, %s4tWP%
     GuiControl,, s4tWPMinCards, %s4tWPMinCards%
     GuiControl,, s4tDiscordUserId, %s4tDiscordUserId%
     GuiControl,, s4tDiscordWebhookURL, %s4tDiscordWebhookURL%
+    GuiControl,, ocrShinedust, %ocrShinedust%
     GuiControl,, s4tSendAccountXml, %s4tSendAccountXml%
-    GuiControl,, s4tSilent, %s4tSilent%
+    ; GuiControl,, s4tSilent, %s4tSilent%
     
     UpdateS4TButtonText()
 return
@@ -1076,7 +1187,7 @@ ShowToolsAndSystemSettings:
     Gui, ToolsAndSystemSelect:Add, Checkbox, % (checkWPthanks ? "Checked" : "") " vcheckWPthanks_Popup x" . col1X . " y" . yPos . " cWhite", Check for Wonderpick Thanks
     yPos += 20
     
-    Gui, ToolsAndSystemSelect:Add, Checkbox, % (slowMotion ? "Checked" : "") " vslowMotion_Popup x" . col1X . " y" . yPos . " cWhite", 1x speed (no speedmod)
+    Gui, ToolsAndSystemSelect:Add, Checkbox, % (slowMotion ? "Checked" : "") " vslowMotion_Popup x" . col1X . " y" . yPos . " cWhite", No Speedmod Menu Clicks
     yPos += 35
     
     sectionColor := "cWhite"
@@ -1298,6 +1409,13 @@ ClearSpecialMissionHistory:
     
 Save:
   Gui, Submit, NoHide
+
+  if (deleteMethod != "Inject Wonderpick 96P+") {
+   s4tWP := false
+   s4tWPMinCards := 1
+  }
+
+  Deluxe := 0 ; Turn off Deluxe for all users now that pack is removed
   
   SaveAllSettings()
   
@@ -1315,6 +1433,12 @@ Save:
   confirmMsg .= "`n"
   
   confirmMsg .= "`n" . SetUpDictionary.Confirm_SelectedPacks . "`n"
+  if (MegaGyarados)
+    confirmMsg .= "• " . currentDictionary.Txt_MegaGyarados . "`n"
+  if (MegaBlaziken)
+    confirmMsg .= "• " . currentDictionary.Txt_MegaBlaziken . "`n"
+  if (MegaAltaria)
+    confirmMsg .= "• " . currentDictionary.Txt_MegaAltaria . "`n"  
   if (Deluxe)
     confirmMsg .= "• " . currentDictionary.Txt_Deluxe . "`n"
   if (Springs)
@@ -1351,8 +1475,8 @@ Save:
   additionalSettings := ""
   if (packMethod)
     additionalSettings .= SetUpDictionary.Confirm_1PackMethod . "`n"
-  if (nukeAccount && !injectMethod)
-    additionalSettings .= SetUpDictionary.Confirm_MenuDelete . "`n"
+  ; if (nukeAccount && !injectMethod)
+    ; additionalSettings .= SetUpDictionary.Confirm_MenuDelete . "`n"
   if (openExtraPack)
     additionalSettings .= SetUpDictionary.Confirm_openExtraPack . "`n"
   if (spendHourGlass)
@@ -1377,29 +1501,31 @@ Save:
     confirmMsg .= "`n" . SetUpDictionary.Confirm_AdditionalSettings . "`n" . additionalSettings
   }
   
-  cardDetection := ""
-  if (FullArtCheck)
-    cardDetection .= SetUpDictionary.Confirm_SingleFullArt . "`n"
-  if (TrainerCheck)
-    cardDetection .= SetUpDictionary.Confirm_SingleTrainer . "`n"
-  if (RainbowCheck)
-    cardDetection .= SetUpDictionary.Confirm_SingleRainbow . "`n"
-  if (PseudoGodPack)
-    cardDetection .= SetUpDictionary.Confirm_Double2Star . "`n"
-  if (CrownCheck)
-    cardDetection .= SetUpDictionary.Confirm_SaveCrowns . "`n"
-  if (ShinyCheck)
-    cardDetection .= SetUpDictionary.Confirm_SaveShiny . "`n"
-  if (ImmersiveCheck)
-    cardDetection .= SetUpDictionary.Confirm_SaveImmersives . "`n"
-  if (CheckShinyPackOnly)
-    cardDetection .= SetUpDictionary.Confirm_OnlyShinyPacks . "`n"
-  if (InvalidCheck)
-    cardDetection .= SetUpDictionary.Confirm_IgnoreInvalid . "`n"
-    
-  if (cardDetection != "") {
-    confirmMsg .= "`n" . SetUpDictionary.Confirm_CardDetection . "`n" . cardDetection
-  }
+   cardDetection := ""
+   if (deleteMethod = "Inject Wonderpick 96P+") {
+   if (FullArtCheck)
+      cardDetection .= SetUpDictionary.Confirm_SingleFullArt . "`n"
+   if (TrainerCheck)
+      cardDetection .= SetUpDictionary.Confirm_SingleTrainer . "`n"
+   if (RainbowCheck)
+      cardDetection .= SetUpDictionary.Confirm_SingleRainbow . "`n"
+   if (PseudoGodPack)
+      cardDetection .= SetUpDictionary.Confirm_Double2Star . "`n"
+   if (CrownCheck)
+      cardDetection .= SetUpDictionary.Confirm_SaveCrowns . "`n"
+   if (ShinyCheck)
+      cardDetection .= SetUpDictionary.Confirm_SaveShiny . "`n"
+   if (ImmersiveCheck)
+      cardDetection .= SetUpDictionary.Confirm_SaveImmersives . "`n"
+   if (CheckShinyPackOnly)
+      cardDetection .= SetUpDictionary.Confirm_OnlyShinyPacks . "`n"
+   if (InvalidCheck)
+      cardDetection .= SetUpDictionary.Confirm_IgnoreInvalid . "`n"
+      
+   if (cardDetection != "") {
+      confirmMsg .= "`n" . SetUpDictionary.Confirm_CardDetection . "`n" . cardDetection
+   }
+   }
   
   if (s4tEnabled) {
     confirmMsg .= "`n" . SetUpDictionary.Confirm_SaveForTrade . ": " . SetUpDictionary.Confirm_Enabled . "`n"
@@ -1410,15 +1536,32 @@ Save:
       s4tSettings .= "• 3 Diamond`n"
     if (s4t4Dmnd)
       s4tSettings .= "• 4 Diamond`n"
+    if (s4tShiny1Star)
+      s4tSettings .= "• 1 Star Shiny`n"
+   if (s4tShiny2Star)
+      s4tSettings .= "• 2 Star Shiny`n"
+   if (s4tTrainer)
+      s4tSettings .= "• 2 Star Trainer`n"
+   if (s4tRainbow)
+      s4tSettings .= "• 2 Star Rainbow`n"
+   if (s4tFullArt)
+      s4tSettings .= "• 2 Star Full Art`n"
+   if (s4tImmersive)
+      s4tSettings .= "• Immersive`n"
+   if (s4tCrown)
+      s4tSettings .= "• Crown Rare`n"
     if (s4tWP)
       s4tSettings .= "• " . SetUpDictionary.Confirm_WonderPick . " (" . s4tWPMinCards . " " . SetUpDictionary.Confirm_MinCards . ")`n"
-    if (s4tSilent)
-      s4tSettings .= "• " . SetUpDictionary.Confirm_SilentPings . "`n"
+    ; if (s4tSilent)
+      ; s4tSettings .= "• " . SetUpDictionary.Confirm_SilentPings . "`n"
     confirmMsg .= s4tSettings
   }
   
   if (s4tSendAccountXml && s4tEnabled) {
     confirmMsg .= "`n" . SetUpDictionary.Confirm_XMLWarning . "`n"
+   }
+  if (ocrShinedust && s4tEnabled) {
+    confirmMsg .= "• Track Shinedust`n"
    }
   if (sendAccountXml) {
     confirmMsg .= "`n" . SetUpDictionary.Confirm_XMLWarning . "`n"
@@ -1534,16 +1677,25 @@ ArrangeWindows:
    }
 return
 
+DiscordLink:
+   Run, https://discord.com/invite/C9Nyf7P4sT
+Return
+
+BuyMeCoffee:
+   Run, https://ko-fi.com/kevnitg
+return
+
 OpenToolTip:
    Run, https://mixman208.github.io/PTCGPB/
 return
 
-OpenLink:
-   Run, https://buymeacoffee.com/aarturoo
-return
-
 OpenDiscord:
    Run, https://discord.gg/C9Nyf7P4sT
+return
+
+OpenTradesDashboard:
+   TradesFile := A_ScriptDir . "\Accounts\Trades\Trades_Dashboard.html"
+   Run, %TradesFile%
 return
 
 RunXMLSortTool:
@@ -1694,11 +1846,15 @@ MigrateDeleteMethod(oldMethod) {
     if (oldMethod = "13 Pack") {
         return "Create Bots (13P)"
     } else if (oldMethod = "Inject") {
-        return "Inject 13-39P"
+        return "Inject 13P+"
     } else if (oldMethod = "Inject for Reroll") {
-        return "Inject Wonderpick 39P+"
+        return "Inject Wonderpick 96P+"
     } else if (oldMethod = "Inject Missions") {
-        return "Inject 13-39P"
+        return "Inject 13P+"
+    } else if (oldMethod = "Inject 13-39P") {
+        return "Inject 13P+"
+    } else if (oldMethod = "Inject Wonderpick 39P+") {
+        return "Inject Wonderpick 96P+"
     }
     return oldMethod
 }
@@ -1725,9 +1881,9 @@ LoadSettingsFromIni() {
       IniRead, autoLaunchMonitor, Settings.ini, UserSettings, autoLaunchMonitor, 1
       IniRead, TestTime, Settings.ini, UserSettings, TestTime, 3600
       IniRead, Delay, Settings.ini, UserSettings, Delay, 250
-      IniRead, waitTime, Settings.ini, UserSettings, waitTime, 3
-      IniRead, swipeSpeed, Settings.ini, UserSettings, swipeSpeed, 250
-      IniRead, slowMotion, Settings.ini, UserSettings, slowMotion, 0
+      IniRead, waitTime, Settings.ini, UserSettings, waitTime, 5
+      IniRead, swipeSpeed, Settings.ini, UserSettings, swipeSpeed, 500
+      IniRead, slowMotion, Settings.ini, UserSettings, slowMotion, 1 ; default is now OFF for no-mod-menu support
       
       IniRead, SelectedMonitorIndex, Settings.ini, UserSettings, SelectedMonitorIndex, 1
       IniRead, defaultLanguage, Settings.ini, UserSettings, defaultLanguage, Scale125
@@ -1753,13 +1909,15 @@ LoadSettingsFromIni() {
         }
       IniRead, packMethod, Settings.ini, UserSettings, packMethod, 0
       IniRead, nukeAccount, Settings.ini, UserSettings, nukeAccount, 0
+      nukeAccount := 0 ; forced to always be disabled
       IniRead, spendHourGlass, Settings.ini, UserSettings, spendHourGlass, 0
       IniRead, openExtraPack, Settings.ini, UserSettings, openExtraPack, 0
-      IniRead, injectSortMethod, Settings.ini, UserSettings, injectSortMethod, ModifiedAsc
+      IniRead, injectSortMethod, Settings.ini, UserSettings, injectSortMethod, PacksDesc
       IniRead, godPack, Settings.ini, UserSettings, godPack, Continue
       IniRead, claimSpecialMissions, Settings.ini, UserSettings, claimSpecialMissions, 0
       IniRead, claimDailyMission, Settings.ini, UserSettings, claimDailyMission, 0
       IniRead, wonderpickForEventMissions, Settings.ini, UserSettings, wonderpickForEventMissions, 0
+      ; wonderpickForEventMissions := 0 ; forced turned off during Sneak Peek for now...
       IniRead, checkWPthanks, Settings.ini, UserSettings, checkWPthanks, 0
       
       IniRead, Palkia, Settings.ini, UserSettings, Palkia, 0
@@ -1777,7 +1935,10 @@ LoadSettingsFromIni() {
       IniRead, HoOh, Settings.ini, UserSettings, HoOh, 0
       IniRead, Lugia, Settings.ini, UserSettings, Lugia, 0
       IniRead, Springs, Settings.ini, UserSettings, Springs, 0
-      IniRead, Deluxe, Settings.ini, UserSettings, Deluxe, 1
+      IniRead, Deluxe, Settings.ini, UserSettings, Deluxe, 0
+      IniRead, MegaGyarados, Settings.ini, UserSettings, MegaGyarados, 1
+      IniRead, MegaBlaziken, Settings.ini, UserSettings, MegaBlaziken, 0
+      IniRead, MegaAltaria, Settings.ini, UserSettings, MegaAltaria, 0
       
       IniRead, CheckShinyPackOnly, Settings.ini, UserSettings, CheckShinyPackOnly, 0
       IniRead, TrainerCheck, Settings.ini, UserSettings, TrainerCheck, 0
@@ -1790,16 +1951,25 @@ LoadSettingsFromIni() {
       IniRead, PseudoGodPack, Settings.ini, UserSettings, PseudoGodPack, 0
       
       IniRead, s4tEnabled, Settings.ini, UserSettings, s4tEnabled, 0
-      IniRead, s4tSilent, Settings.ini, UserSettings, s4tSilent, 1
+      IniRead, s4tSilent, Settings.ini, UserSettings, s4tSilent, 0
+        s4tSilent := 0 ; always disable, removing feature for now. -Kevin
       IniRead, s4t3Dmnd, Settings.ini, UserSettings, s4t3Dmnd, 0
       IniRead, s4t4Dmnd, Settings.ini, UserSettings, s4t4Dmnd, 0
       IniRead, s4t1Star, Settings.ini, UserSettings, s4t1Star, 0
       IniRead, s4tGholdengo, Settings.ini, UserSettings, s4tGholdengo, 0
+      IniRead, s4tTrainer, Settings.ini, UserSettings, s4tTrainer, 0
+      IniRead, s4tRainbow, Settings.ini, UserSettings, s4tRainbow, 0
+      IniRead, s4tFullArt, Settings.ini, UserSettings, s4tFullArt, 0
+      IniRead, s4tCrown, Settings.ini, UserSettings, s4tCrown, 0
+      IniRead, s4tImmersive, Settings.ini, UserSettings, s4tImmersive, 0
+      IniRead, s4tShiny1Star, Settings.ini, UserSettings, s4tShiny1Star, 0
+      IniRead, s4tShiny2Star, Settings.ini, UserSettings, s4tShiny2Star, 0
       IniRead, s4tWP, Settings.ini, UserSettings, s4tWP, 0
       IniRead, s4tWPMinCards, Settings.ini, UserSettings, s4tWPMinCards, 1
       IniRead, s4tDiscordWebhookURL, Settings.ini, UserSettings, s4tDiscordWebhookURL, ""
       IniRead, s4tDiscordUserId, Settings.ini, UserSettings, s4tDiscordUserId, ""
       IniRead, s4tSendAccountXml, Settings.ini, UserSettings, s4tSendAccountXml, 0
+      IniRead, ocrShinedust, Settings.ini, UserSettings, ocrShinedust, 0
       
       IniRead, DiscordWebhookURL, Settings.ini, UserSettings, DiscordWebhookURL, ""
       IniRead, DiscordUserId, Settings.ini, UserSettings, DiscordUserId, ""
@@ -1832,6 +2002,9 @@ LoadSettingsFromIni() {
       IniRead, minStarsA4Lugia, Settings.ini, UserSettings, minStarsA4Lugia, 0
       IniRead, minStarsA4Springs, Settings.ini, UserSettings, minStarsA4Springs, 0
       IniRead, minStarsA4Deluxe, Settings.ini, UserSettings, minStarsA4Deluxe, 0
+      IniRead, minStarsMegaGyarados, Settings.ini, UserSettings, minStarsMegaGyarados, 0
+      IniRead, minStarsMegaBlaziken, Settings.ini, UserSettings, minStarsMegaBlaziken, 0
+      IniRead, minStarsMegaAltaria, Settings.ini, UserSettings, minStarsMegaAltaria, 0
       
       IniRead, waitForEligibleAccounts, Settings.ini, UserSettings, waitForEligibleAccounts, 1
       IniRead, maxWaitHours, Settings.ini, UserSettings, maxWaitHours, 24
@@ -1842,16 +2015,31 @@ LoadSettingsFromIni() {
       if (!IsNumeric(Columns) || Columns < 1)
          Columns := 5
       if (!IsNumeric(waitTime))
-         waitTime := 1
+         waitTime := 5
       if (!IsNumeric(Delay) || Delay < 10)
          Delay := 250
       if (s4tWPMinCards < 1 || s4tWPMinCards > 2)
          s4tWPMinCards := 1
          
-      validMethods := "Create Bots (13P)|Inject 13-39P|Inject Wonderpick 39P+"
+      validMethods := "Create Bots (13P)|Inject 13P+|Inject Wonderpick 96P+"
       if (!InStr(validMethods, deleteMethod)) {
          deleteMethod := "Create Bots (13P)"
          IniWrite, %deleteMethod%, Settings.ini, UserSettings, deleteMethod
+      }
+
+      ; clear card detection when not wonderpicking
+      if (deleteMethod != "Inject Wonderpick 96P+") {
+         FullArtCheck := 0
+         TrainerCheck := 0
+         RainbowCheck := 0
+         PseudoGodPack := 0
+         CheckShinyPackOnly := 0
+         InvalidCheck := 0
+         CrownCheck := 0
+         ShinyCheck := 0
+         ImmersiveCheck := 0
+         minStars := 0
+         minStarsShiny := 0
       }
 
       return true
@@ -1881,7 +2069,7 @@ CreateDefaultSettingsFile() {
       iniContent .= "instanceStartDelay=10`n"
       iniContent .= "defaultLanguage=Scale125`n"
       iniContent .= "SelectedMonitorIndex=1`n"
-      iniContent .= "swipeSpeed=250`n"
+      iniContent .= "swipeSpeed=500`n"
       iniContent .= "runMain=0`n"
       iniContent .= "Mains=0`n"
       iniContent .= "autoUseGPTest=0`n"
@@ -1902,7 +2090,7 @@ CreateDefaultSettingsFile() {
       iniContent .= "variablePackCount=15`n"
       iniContent .= "claimSpecialMissions=0`n"
       iniContent .= "spendHourGlass=0`n"
-      iniContent .= "injectSortMethod=ModifiedAsc`n"
+      iniContent .= "injectSortMethod=PacksDesc`n"
       iniContent .= "waitForEligibleAccounts=1`n"
       iniContent .= "maxWaitHours=24`n"
       iniContent .= "menuExpanded=True`n"
@@ -1915,6 +2103,7 @@ CreateDefaultSettingsFile() {
    return false
 }
 
+
 SaveAllSettings() {
    global IsLanguageSet, defaultBotLanguage, BotLanguage, currentfont, FontColor
    global CurrentTheme, shownLicense
@@ -1924,22 +2113,38 @@ SaveAllSettings() {
    global autoLaunchMonitor, autoUseGPTest, TestTime, groupRerollEnabled
    global CheckShinyPackOnly, TrainerCheck, FullArtCheck, RainbowCheck, ShinyCheck, CrownCheck
    global InvalidCheck, ImmersiveCheck, PseudoGodPack, minStars, Palkia, Dialga, Arceus, Shining
-   global Mew, Pikachu, Charizard, Mewtwo, Solgaleo, Lunala, Buzzwole, Eevee, HoOh, Lugia, Springs, Deluxe, slowMotion, ocrLanguage, clientLanguage
+   global Mew, Pikachu, Charizard, Mewtwo, Solgaleo, Lunala, Buzzwole, Eevee, HoOh, Lugia, Springs, Deluxe
+   global MegaGyarados, MegaBlaziken, MegaAltaria, slowMotion, ocrLanguage, clientLanguage
    global CurrentVisibleSection, heartBeatDelay, sendAccountXml, showcaseEnabled, isDarkTheme
    global useBackgroundImage, tesseractPath, debugMode, useTesseract, statusMessage
    global s4tEnabled, s4tSilent, s4t3Dmnd, s4t4Dmnd, s4t1Star, s4tGholdengo, s4tWP, s4tWPMinCards
-   global s4tDiscordUserId, s4tDiscordWebhookURL, s4tSendAccountXml, minStarsShiny, instanceLaunchDelay, applyRoleFilters, mainIdsURL, vipIdsURL
+   global s4tDiscordUserId, s4tDiscordWebhookURL, s4tSendAccountXml, ocrShinedust, minStarsShiny, instanceLaunchDelay, applyRoleFilters, mainIdsURL, vipIdsURL
+   global s4tCrown, s4tImmersive, s4tShiny1Star, s4tShiny2Star, s4tTrainer, s4tRainbow, s4tFullArt
    global spendHourGlass, openExtraPack, injectSortMethod, rowGap, SortByDropdown
    global waitForEligibleAccounts, maxWaitHours, skipMissionsInjectMissions
    global minStarsEnabled, minStarsA1Mewtwo, minStarsA1Charizard, minStarsA1Pikachu, minStarsA1a
    global minStarsA2Dialga, minStarsA2Palkia, minStarsA2a, minStarsA2b
    global minStarsA3Solgaleo, minStarsA3Lunala, minStarsA3a, minStarsA3b
+   global minStarsA4HoOh, minStarsA4Lugia, minStarsA4Springs, minStarsA4Deluxe
+   global minStarsMegaGyarados, minStarsMegaBlaziken, minStarsMegaAltaria
    global menuExpanded
    global claimSpecialMissions, claimDailyMission, wonderpickForEventMissions
    global checkWPthanks
 
-   if (deleteMethod != "Inject Wonderpick 39P+") {
+   if (deleteMethod != "Inject Wonderpick 96P+") {
        packMethod := false
+       ; Clear card detection settings
+       FullArtCheck := 0
+       TrainerCheck := 0
+       RainbowCheck := 0
+       PseudoGodPack := 0
+       CheckShinyPackOnly := 0
+       InvalidCheck := 0
+       CrownCheck := 0
+       ShinyCheck := 0
+       ImmersiveCheck := 0
+       minStars := 0
+       minStarsShiny := 0
    }
    
    iniContent := "[UserSettings]`n"
@@ -1980,6 +2185,9 @@ SaveAllSettings() {
    iniContent .= "Lugia=" Lugia "`n"
    iniContent .= "Springs=" Springs "`n"
    iniContent .= "Deluxe=" Deluxe "`n"
+   iniContent .= "MegaGyarados=" MegaGyarados "`n"
+   iniContent .= "MegaBlaziken=" MegaBlaziken "`n"
+   iniContent .= "MegaAltaria=" MegaAltaria "`n"
    iniContent .= "CheckShinyPackOnly=" CheckShinyPackOnly "`n"
    iniContent .= "TrainerCheck=" TrainerCheck "`n"
    iniContent .= "FullArtCheck=" FullArtCheck "`n"
@@ -1995,8 +2203,16 @@ SaveAllSettings() {
    iniContent .= "s4t4Dmnd=" s4t4Dmnd "`n"
    iniContent .= "s4t1Star=" s4t1Star "`n"
    iniContent .= "s4tGholdengo=" s4tGholdengo "`n"
+   iniContent .= "s4tTrainer=" s4tTrainer "`n"
+   iniContent .= "s4tRainbow=" s4tRainbow "`n"
+   iniContent .= "s4tFullArt=" s4tFullArt "`n"
+   iniContent .= "s4tCrown=" s4tCrown "`n"
+   iniContent .= "s4tImmersive=" s4tImmersive "`n"
+   iniContent .= "s4tShiny1Star=" s4tShiny1Star "`n"
+   iniContent .= "s4tShiny2Star=" s4tShiny2Star "`n"
    iniContent .= "s4tWP=" s4tWP "`n"
    iniContent .= "s4tSendAccountXml=" s4tSendAccountXml "`n"
+   iniContent .= "ocrShinedust=" ocrShinedust "`n"
    iniContent .= "sendAccountXml=" sendAccountXml "`n"
    iniContent .= "heartBeat=" heartBeat "`n"
    iniContent .= "menuExpanded=" menuExpanded "`n"
@@ -2011,7 +2227,7 @@ SaveAllSettings() {
    if (deleteMethod = "" || deleteMethod = "ERROR") {
       deleteMethod := "Create Bots (13P)"
    }
-   validMethods := "Create Bots (13P)|Inject 13-39P|Inject Wonderpick 39P+"
+   validMethods := "Create Bots (13P)|Inject 13P+|Inject Wonderpick 96P+"
    if (!InStr(validMethods, deleteMethod)) {
       deleteMethod := "Create Bots (13P)"
    }
@@ -2033,7 +2249,7 @@ SaveAllSettings() {
    else if (SortByDropdown = "Most Packs First")
       injectSortMethod := "PacksDesc"
    iniContent_Second := "deleteMethod=" deleteMethod "`n"
-   if (deleteMethod = "Inject Wonderpick 39P+") {
+   if (deleteMethod = "Inject Wonderpick 96P+") {
       iniContent_Second .= "FriendID=" FriendID "`n"
       iniContent_Second .= "mainIdsURL=" mainIdsURL "`n"
    } else {
@@ -2089,6 +2305,9 @@ SaveAllSettings() {
    iniContent_Second .= "minStarsA4Lugia=" minStarsA4Lugia "`n"
    iniContent_Second .= "minStarsA4Springs=" minStarsA4Springs "`n"
    iniContent_Second .= "minStarsA4Deluxe=" minStarsA4Deluxe "`n"
+   iniContent_Second .= "minStarsMegaGyarados=" minStarsMegaGyarados "`n"
+   iniContent_Second .= "minStarsMegaBlaziken=" minStarsMegaBlaziken "`n"
+   iniContent_Second .= "minStarsMegaMegaAltaria=" minStarsMegaAltaria "`n"
    iniContent_Second .= "s4tWPMinCards=" s4tWPMinCards "`n"
    iniContent_Second .= "s4tDiscordUserId=" s4tDiscordUserId "`n"
    iniContent_Second .= "s4tDiscordWebhookURL=" s4tDiscordWebhookURL "`n"
@@ -2129,7 +2348,8 @@ StartBot() {
    global mainIdsURL, showcaseEnabled, defaultLanguage, scaleParam, FriendID
    global heartBeat, heartBeatName, heartBeatWebhookURL, heartBeatDelay, debugMode
    global Shining, Arceus, Palkia, Dialga, Mew, Pikachu, Charizard, Mewtwo
-   global Solgaleo, Lunala, Buzzwole, Eevee, HoOh, Lugia, Springs, Deluxe, packMethod, nukeAccount
+   global Solgaleo, Lunala, Buzzwole, Eevee, HoOh, Lugia, Springs, Deluxe
+   global MegaBlaziken, MegaGyarados, MegaAltaria, packMethod, nukeAccount
    global SelectedMonitorIndex, localVersion, githubUser, rerollTime, PackGuiBuild
    
    PackGuiBuild := 0
@@ -2286,6 +2506,12 @@ StartBot() {
       Selected.Push("Springs")
    if(Deluxe)
       Selected.Push("Deluxe")
+   if(MegaGyarados)
+      Selected.Push("MegaGyarados")
+   if(MegaBlaziken)
+      Selected.Push("MegaBlaziken")
+   if(MegaAltaria)
+      Selected.Push("MegaAltaria")
 
    for index, value in Selected {
       if(index = Selected.MaxIndex())
@@ -2830,7 +3056,6 @@ KillAllScripts() {
    Gui, PackStatusGUI:Destroy
 
    Return
-   DiscordLink:
-   Run, https://discord.com/invite/C9Nyf7P4sT
-   Return
 }
+
+
